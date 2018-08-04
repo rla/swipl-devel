@@ -1,0 +1,12 @@
+[
+    "FS",
+    "cwrap",
+    "intArrayFromString",
+    "allocate",
+    "setValue",
+    "ALLOC_NORMAL",
+    "getValue",
+    "UTF8ToString",
+    "Pointer_stringify",
+    "lengthBytesUTF8",
+    "stringToUTF8"]

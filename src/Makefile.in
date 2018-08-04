@@ -243,11 +243,16 @@ swipl-web.js:	swipl.bc $(STARTUPPATH)
 		mkdir -p wasm-preload/library
 		cp $(STARTUPPATH) wasm-preload
 		cp -r ../library/* wasm-preload/library
-		$(CC) $(COFLAGS) -s WASM=1 -s BINARYEN_METHOD='native-wasm' \
+		$(CC) $(COFLAGS) \
+			-s WASM=1 \
+			-s MODULARIZE=1 \
+			-s EXPORT_NAME=SWIProlog \
+			-s EXPORT_ES6=1 \
+			-s BINARYEN_METHOD='native-wasm' \
 			-s NO_EXIT_RUNTIME=0 \
 			-s EXPORTED_FUNCTIONS=@wasm/exports.json \
-			-s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall","cwrap","intArrayFromString","allocate","setValue","ALLOC_NORMAL"]' \
-			swipl.bc -o swipl-web.js --preload-file wasm-preload
+			-s EXPORTED_RUNTIME_METHODS=@wasm/runtime_exports.json \
+			swipl.bc -o swipl-web.js --preload-file wasm-preload --post-js wasm/prolog.js
 
 $(STARTUPPATH):	$(PLINIT) $(PLSRC) $(PL)$(EXEEXT) $(DEVPL)
 		rm -f $(STARTUPPATH)
@@ -722,6 +727,8 @@ clean:
 		[ ! -f libtai/Makefile ] || $(MAKE) -C libtai $@
 		rm -f *.o $(ALLOBJ) os/*.o a.out core *~ #* parms.h
 		rm -rf *.dSYM
+		rm -rf wasm-preload
+		rm -f swipl-web.js swipl-web.wasm swipl-web.dat
 
 profclean:
 		[ ! -f libtai/Makefile ] || $(MAKE) -C libtai $@
