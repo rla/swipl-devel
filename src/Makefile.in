@@ -247,7 +247,6 @@ swipl-web.js:	swipl.bc $(STARTUPPATH)
 			-s WASM=1 \
 			-s MODULARIZE=1 \
 			-s EXPORT_NAME=SWIProlog \
-			-s EXPORT_ES6=1 \
 			-s BINARYEN_METHOD='native-wasm' \
 			-s NO_EXIT_RUNTIME=0 \
 			-s EXPORTED_FUNCTIONS=@wasm/exports.json \
