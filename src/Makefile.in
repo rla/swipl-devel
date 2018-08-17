@@ -251,7 +251,7 @@ swipl-web.js:	swipl.bc $(STARTUPPATH)
 			-s NO_EXIT_RUNTIME=0 \
 			-s EXPORTED_FUNCTIONS=@wasm/exports.json \
 			-s EXPORTED_RUNTIME_METHODS=@wasm/runtime_exports.json \
-			swipl.bc -o swipl-web.js --preload-file wasm-preload --post-js wasm/prolog.js
+			swipl.bc -o wasm/swipl-web.js --preload-file wasm-preload --post-js wasm/prolog.js
 
 $(STARTUPPATH):	$(PLINIT) $(PLSRC) $(PL)$(EXEEXT) $(DEVPL)
 		rm -f $(STARTUPPATH)
@@ -727,7 +727,7 @@ clean:
 		rm -f *.o $(ALLOBJ) os/*.o a.out core *~ #* parms.h
 		rm -rf *.dSYM
 		rm -rf wasm-preload
-		rm -f swipl-web.js swipl-web.wasm swipl-web.dat
+		rm -f wasm/swipl-web.js wasm/swipl-web.wasm wasm/swipl-web.dat
 
 profclean:
 		[ ! -f libtai/Makefile ] || $(MAKE) -C libtai $@
