@@ -41,6 +41,16 @@
 #endif
 
 
+#ifndef NOCRYPT
+#ifndef z_crc_t
+#ifdef Z_U4
+typedef Z_U4 z_crc_t;
+#else
+typedef unsigned long z_crc_t;
+#endif
+#endif
+#endif
+
 #ifndef local
 #  define local static
 #endif
@@ -110,14 +120,6 @@ const char zip_copyright[] =" zip 1.01 Copyright 1998-2004 Gilles Vollant - http
 #define CRC_LOCALHEADER_OFFSET  (0x0e)
 
 #define SIZECENTRALHEADER (0x2e) /* 46 */
-
-#if ZLIB_VERNUM < 0x1270
-#ifdef Z_U4
-typedef Z_U4 z_crc_t;
-#else
-typedef unsigned long z_crc_t;
-#endif
-#endif
 
 typedef struct linkedlist_datablock_internal_s
 {
