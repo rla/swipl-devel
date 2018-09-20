@@ -1,0 +1,10 @@
+{
+    "name": "swipl-wasm",
+    "version": "1.0.0",
+    "private": true,
+    "devDependencies": {
+        "parseurl": "1.3.2",
+        "puppeteer": "1.8.0",
+        "send": "0.16.2"
+    }
+}

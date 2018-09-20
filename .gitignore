@@ -136,6 +136,7 @@ src/pl.sh
 src/pl.res
 src/swipl
 src/version.h
+src/wasm/node_modules
 boot32.prc
 boot64.prc
 doc-version
