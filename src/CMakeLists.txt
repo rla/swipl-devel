@@ -19,7 +19,9 @@ include(CheckTypeSize)
 include(AlignOf)
 include(CheckStructHasMember)
 
-find_package(Threads)
+if(NOT EMSCRIPTEN)
+ find_package(Threads)
+endif()
 find_package(ZLIB)
 find_package(GMP)
 if(UNIX)
@@ -245,6 +247,11 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/dotdot.txt" "..\n")
 add_executable(mkvmi mkvmi.c)
 add_executable(defatom defatom.c)
 
+if(EMSCRIPTEN)
+  set_target_properties(mkvmi PROPERTIES LINK_FLAGS "${LINK_FLAGS} -s ASSERTIONS=2 -s NODERAWFS=1")
+  set_target_properties(defatom PROPERTIES LINK_FLAGS "${LINK_FLAGS} -s ASSERTIONS=2 -s NODERAWFS=1")
+endif()
+
 # Establish libraries
 if(CURSES_FOUND)
   set(LIBSWIPL_LIBRARIES ${LIBSWIPL_LIBRARIES} ${CURSES_LIBRARIES})
@@ -287,12 +294,15 @@ target_include_directories(libswipl BEFORE PRIVATE
 			   ${LIBSWIPL_INCLUDES})
 target_link_libraries(libswipl ${LIBSWIPL_LIBRARIES})
 
+# We do not build swipl-ld if we target WebAssembly.
+if(NOT EMSCRIPTEN)
 add_executable(swipl-ld ${SRC_SWIPL_LD})
 target_include_directories(swipl-ld BEFORE PRIVATE
 			   ${CMAKE_CURRENT_BINARY_DIR}
 			   ${CMAKE_CURRENT_SOURCE_DIR}
 			   ${LIBSWIPL_INCLUDES})
 add_dependencies(swipl-ld vmi-metadata core-constants)
+endif()
 
 if(WIN32)
 include(WindowsTargets)
@@ -315,6 +325,7 @@ configure_file(parms.h.cmake parms.h)
 # Installation
 ################
 
+if(NOT EMSCRIPTEN)
 install(TARGETS swipl libswipl swipl-ld
 	RUNTIME DESTINATION ${SWIPL_INSTALL_ARCH_EXE}
         LIBRARY DESTINATION ${SWIPL_INSTALL_ARCH_LIB}
@@ -348,6 +359,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/dot.txt
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/dotdot.txt
 	DESTINATION ${SWIPL_INSTALL_PREFIX}/bin
 	RENAME "swipl.home")
+endif()
 
 if(WIN32)
 install(TARGETS swipl-win
