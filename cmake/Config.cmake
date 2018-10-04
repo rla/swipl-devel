@@ -103,7 +103,10 @@ alignof("void*" c ALIGNOF_VOIDP)
 # Functions
 
 # Misc
+# Do not assume useful mmap support in WebAssembly.
+if(NOT EMSCRIPTEN)
 check_function_exists(mmap HAVE_MMAP)
+endif()
 check_function_exists(strerror HAVE_STRERROR)
 check_function_exists(poll HAVE_POLL)
 check_function_exists(popen HAVE_POPEN)

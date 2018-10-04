@@ -238,9 +238,15 @@ add_custom_command(
     DEPENDS swipl.prc ${PL_LIB_FILES_ALL}
 )
 
+if(EMSCRIPTEN)
+add_custom_target(prolog_products ALL
+    DEPENDS swipl.prc
+)
+else()
 add_custom_target(prolog_products ALL
     DEPENDS swipl.prc ${PL_LIB_INDEX}
 )
+endif()
 
 configure_file(config.h.cmake config.h)
 
@@ -256,6 +262,13 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/dotdot.txt" "..\n")
 # build helpers
 add_executable(mkvmi mkvmi.c)
 add_executable(defatom defatom.c)
+
+# Build helpers with NODERAWFS in WebAssembly port
+# to access the actual filesystem.
+if(EMSCRIPTEN)
+  set_target_properties(mkvmi PROPERTIES LINK_FLAGS "${LINK_FLAGS} -s ASSERTIONS=2 -s NODERAWFS=1")
+  set_target_properties(defatom PROPERTIES LINK_FLAGS "${LINK_FLAGS} -s ASSERTIONS=2 -s NODERAWFS=1")
+endif()
 
 # Establish libraries
 if(CURSES_FOUND)
@@ -284,6 +297,11 @@ add_executable(swipl ${SWIPL_SRC})
 target_link_libraries(swipl libswipl)
 target_c_stack(swipl 4000000)
 
+# Filesystem access.
+if(EMSCRIPTEN)
+  set_target_properties(swipl PROPERTIES LINK_FLAGS "${LINK_FLAGS} -s ASSERTIONS=2 -s NODERAWFS=1")
+endif()
+
 # build the library
 add_library(libswipl ${LIBSWIPL_SRC} ${HDR_CORE})
 add_dependencies(libswipl version.h vmi-metadata core-constants)
@@ -305,6 +323,12 @@ target_include_directories(swipl-ld BEFORE PRIVATE
 			   ${CMAKE_CURRENT_SOURCE_DIR}
 			   ${LIBSWIPL_INCLUDES})
 add_dependencies(swipl-ld vmi-metadata core-constants)
+
+# Allow swipl-ld to use the actual filesystem in
+# the WebAssembly port.
+if(EMSCRIPTEN)
+  set_target_properties(swipl-ld PROPERTIES LINK_FLAGS "${LINK_FLAGS} -s ASSERTIONS=2 -s NODERAWFS=1")
+endif()
 
 if(WIN32)
 include(WindowsTargets)
@@ -381,6 +405,8 @@ endif(WIN32)
 
 # Final update of library indexes
 
+if(NOT EMSCRIPTEN)
 run_installed_swipl(
 	make
 	COMMENT "-- Updating library indexes")
+endif()
