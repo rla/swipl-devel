@@ -221,7 +221,7 @@ add_custom_target(
 )
 
 add_custom_command(
-    OUTPUT  ${SWIPL_BOOT_FILE}
+    OUTPUT  ${SWIPL_BOOT_FILE} 
     COMMAND swipl -q -O -o ${SWIPL_BOOT_FILE} -b ${SWIPL_BUILD_HOME}/boot/init.pl
     DEPENDS swipl ${SWIPL_BOOT_FILES}
 )
@@ -233,9 +233,15 @@ add_custom_command(
     DEPENDS ${SWIPL_BOOT_FILE} prolog_home
 )
 
+if(EMSCRIPTEN)
+add_custom_target(prolog_products ALL
+    DEPENDS ${SWIPL_BOOT_FILE}
+)
+else()
 add_custom_target(prolog_products ALL
     DEPENDS ${SWIPL_BOOT_FILE} ${PL_LIB_INDEX}
 )
+endif()
 
 configure_file(config.h.cmake config.h)
 
@@ -420,11 +426,19 @@ configure_file(parms.h.cmake parms.h)
 # Installation
 ################
 
+if(EMSCRIPTEN)
+install(TARGETS swipl libswipl
+	RUNTIME DESTINATION ${SWIPL_INSTALL_ARCH_EXE}
+        LIBRARY DESTINATION ${SWIPL_INSTALL_ARCH_LIB}
+        ARCHIVE DESTINATION ${SWIPL_INSTALL_ARCH_LIB}
+)
+else()
 install(TARGETS swipl libswipl swipl-ld
 	RUNTIME DESTINATION ${SWIPL_INSTALL_ARCH_EXE}
         LIBRARY DESTINATION ${SWIPL_INSTALL_ARCH_LIB}
         ARCHIVE DESTINATION ${SWIPL_INSTALL_ARCH_LIB}
 )
+endif()
 install(FILES ${SWIPL_BOOT_FILE}
 	DESTINATION ${SWIPL_INSTALL_PREFIX}
 )
@@ -490,3 +504,25 @@ ilink(${CMAKE_INSTALL_PREFIX}/${SWIPL_INSTALL_ARCH_EXE}/swipl-ld
 endif()
 
 endif(WIN32)
+
+if(EMSCRIPTEN)
+  # Make intermediate binaries runnable through Node.js.
+  set_target_properties(mkvmi defatom swipl PROPERTIES LINK_FLAGS "-s NODERAWFS=1 -s EXIT_RUNTIME=1")
+  # Don't build swipl-ld.
+  set_target_properties(swipl-ld PROPERTIES EXCLUDE_FROM_ALL 1)
+  # Create preload directory.
+  set(WASM_PRELOAD_DIR "wasm-preload")
+  set(WASM_BOOT_FILE "wasm-preload/boot.prc")
+  add_custom_command(
+      OUTPUT ${WASM_BOOT_FILE}
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${WASM_PRELOAD_DIR}
+      COMMAND ${CMAKE_COMMAND} -E copy ${SWIPL_BOOT_FILE} ${WASM_BOOT_FILE}
+      COMMAND ${CMAKE_COMMAND} -E copy_directory ${SWIPL_BUILD_LIBRARY} ${WASM_PRELOAD_DIR}/library
+      DEPENDS ${SWIPL_BOOT_FILE} prolog_home)
+  add_custom_target(wasm_preload DEPENDS ${WASM_BOOT_FILE})
+  # Build the browser-deployed binary with a bit different linker flags.
+  add_executable(swipl-web ${SWIPL_SRC})
+  set_target_properties(swipl-web PROPERTIES LINK_FLAGS "-s WASM=1 -s MODULARIZE=1 -s EXPORT_NAME=SWIPL -s BINARYEN_METHOD='native-wasm' -s NO_EXIT_RUNTIME=0 -s EXPORTED_FUNCTIONS=@${CMAKE_SOURCE_DIR}/src/wasm/exports.json -s EXPORTED_RUNTIME_METHODS=@${CMAKE_SOURCE_DIR}/src/wasm/runtime_exports.json --preload-file ${WASM_PRELOAD_DIR} --post-js ${CMAKE_SOURCE_DIR}/src/wasm/prolog.js")
+  target_link_libraries(swipl-web libswipl)
+  add_dependencies(swipl-web wasm_preload prolog_home)
+endif()

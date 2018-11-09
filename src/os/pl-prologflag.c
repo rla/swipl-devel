@@ -1428,6 +1428,9 @@ initPrologFlags(void)
 #ifdef __APPLE__
   setPrologFlag("apple", FT_BOOL|FF_READONLY, TRUE, 0);
 #endif
+#ifdef __EMSCRIPTEN__
+  setPrologFlag("emscripten", FT_BOOL|FF_READONLY, TRUE, 0);
+#endif
 
   setPrologFlag("encoding", FT_ATOM, stringAtom(encoding_to_atom(LD->encoding)));
 

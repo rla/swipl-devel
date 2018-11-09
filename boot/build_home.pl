@@ -181,8 +181,10 @@ add_package(_Pkg, PkgBinDir) :-
 add_package_path(PkgBinDir) :-
     assertz(user:file_search_path(foreign, PkgBinDir)).
 
+:- if(\+ current_prolog_flag(emscripten, true)).
 :- forall(swipl_package(Pkg, PkgBinDir),
           add_package(Pkg, PkgBinDir)).
+:- endif.
 
 %!  set_version_info
 %
@@ -193,7 +195,9 @@ set_version_info :-
     cmake_binary_directory(BinDir),
     version(format('    CMake built from "~w"', [BinDir])).
 
+:- if(\+ current_prolog_flag(emscripten, true)).
 :- initialization(set_version_info).
+:- endif.
 
 % Avoid getting Java from the host when running under Wine.
 
